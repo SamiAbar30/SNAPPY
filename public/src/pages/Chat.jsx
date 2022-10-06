@@ -3,46 +3,47 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 // import { io } from "socket.io-client";
 import styled from "styled-components";
-import { allUsersRoute, host } from "../utils/APIRoutes";
-// import ChatContainer from "../components/ChatContainer";
+// import { allUsersRoute, host } from "../utils/APIRoutes";
+import { allUsersRoute } from "../utils/APIRoutes";
+import ChatContainer from "../components/ChatContainer";
 import Contacts from "../components/Contacts";
-// import Welcome from "../components/Welcome";
+import Welcome from "../components/Welcome";
 
 export default function Chat() {
   const navigate = useNavigate();
-//   const socket = useRef();
+  const socket = useRef();
   const [contacts, setContacts] = useState([]);
   const [currentChat, setCurrentChat] = useState(undefined);
   const [currentUser, setCurrentUser] = useState(undefined);
   useEffect(
-     () => {
-    if (!localStorage.getItem("chat-app-user")) {
-      navigate("/login");
-    } else {
-      setCurrentUser(
-         JSON.parse(
-          localStorage.getItem("chat-app-user")
-        )
-      );
-    }
-  }, []);
-//   useEffect(() => {
-//     if (currentUser) {
-//       socket.current = io(host);
-//       socket.current.emit("add-user", currentUser._id);
-//     }
-//   }, [currentUser]);
-
-  useEffect(()=>{return async () => {
+    () => async () => {
+      if (!localStorage.getItem("chat-app-user")) {
+        navigate("/login");
+      } else {
+        setCurrentUser(await JSON.parse(localStorage.getItem("chat-app-user")));
+      }
+    },
+    []
+  );
+  // useEffect(() => {
+  //   if (currentUser) {
+  //     socket.current = io(host);
+  //     socket.current.emit("add-user", currentUser._id);
+  //   }
+  // }, [currentUser]);
+  const loadingContacts = async () => {
+    const data = await axios.get(`${allUsersRoute}/${currentUser._id}`);
+     setContacts(data.data);
+  };
+  useEffect(() => {
     if (currentUser) {
       if (currentUser.isAvatarImageSet) {
-        const data = await axios.get(`${allUsersRoute}/${currentUser._id}`);
-        setContacts(data.data);
+        loadingContacts();
       } else {
         navigate("/setAvatar");
       }
     }
-  }}, [currentUser]);
+  }, [currentUser]);
   const handleChatChange = (chat) => {
     setCurrentChat(chat);
   };
@@ -50,13 +51,13 @@ export default function Chat() {
     <>
       <Container>
         <div className="container">
-          <Contacts contacts={contacts} currentUser={currentUser} changeChat={handleChatChange} />
-          {/* {currentChat === undefined ? (
+          <Contacts contacts={contacts} changeChat={handleChatChange} />
+          {currentChat === undefined ? (
             <Welcome />
           ) : (
-            <ChatContainer currentChat={currentChat} socket={socket} />
-          )} */}
-        </div> 
+            <ChatContainer currentChat={currentChat} currentUser={currentUser}/>
+          )}
+        </div>
       </Container>
     </>
   );
