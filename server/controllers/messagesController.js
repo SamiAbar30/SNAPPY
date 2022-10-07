@@ -18,7 +18,6 @@ module.exports.addMessages = async (req, res, next) => {
 module.exports.getAllMessages = async (req, res, next) => {
   try {
     const { from, to } = req.body;
-
     const messages = await messageModel
       .find({
         users: {
